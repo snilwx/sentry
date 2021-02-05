@@ -76,6 +76,8 @@ setup_pyenv() {
     fi
   fi
 
+  # If the script is called with the "dot space right" approach (. ./scripts/pyenv_setup.sh),
+  # the effects of this will be persistent outside of this script
   eval "$(pyenv init -)"
 }
 
