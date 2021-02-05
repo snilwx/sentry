@@ -6,10 +6,19 @@ import {arrayMove, SortableContext, verticalListSortingStrategy} from '@dnd-kit/
 import Item, {ItemProps} from './item';
 import SortableItem, {SortableItemProps} from './sortableItem';
 
-type Props = Pick<ItemProps, 'renderItem' | 'innerWrapperStyle' | 'wrapperStyle'> &
+export type UpdateItemsProps = {
+  activeIndex: string;
+  overIndex: string;
+  reorderedItems: Array<string>;
+};
+
+type Props = Pick<
+  ItemProps,
+  'renderItem' | 'innerWrapperStyle' | 'wrapperStyle' | 'className'
+> &
   Pick<SortableItemProps, 'disabled'> & {
     items: Array<string>;
-    onUpdateItems: (items: Array<string>) => void;
+    onUpdateItems: (props: UpdateItemsProps) => void;
   };
 
 type State = {
@@ -32,6 +41,7 @@ class DraggableList extends React.Component<Props, State> {
       wrapperStyle,
       innerWrapperStyle,
       disabled,
+      className,
     } = this.props;
 
     const getIndex = items.indexOf.bind(items);
@@ -52,7 +62,11 @@ class DraggableList extends React.Component<Props, State> {
           if (over) {
             const overIndex = getIndex(over.id);
             if (activeIndex !== overIndex) {
-              onUpdateItems(arrayMove(items, activeIndex, overIndex));
+              onUpdateItems({
+                activeIndex,
+                overIndex,
+                reorderedItems: arrayMove(items, activeIndex, overIndex),
+              });
             }
           }
         }}
@@ -67,6 +81,7 @@ class DraggableList extends React.Component<Props, State> {
               disabled={disabled}
               wrapperStyle={wrapperStyle}
               innerWrapperStyle={innerWrapperStyle}
+              className={className}
             />
           ))}
         </SortableContext>
@@ -79,6 +94,8 @@ class DraggableList extends React.Component<Props, State> {
                 wrapperStyle={wrapperStyle}
                 innerWrapperStyle={innerWrapperStyle}
                 style={{cursor: disabled ? undefined : 'grabbing'}}
+                className={className}
+                disabled={disabled}
               />
             ) : null}
           </DragOverlay>,

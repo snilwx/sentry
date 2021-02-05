@@ -5,7 +5,7 @@ import Item from './item';
 
 export type SortableItemProps = Pick<
   React.ComponentProps<typeof Item>,
-  'renderItem' | 'index' | 'wrapperStyle' | 'innerWrapperStyle'
+  'renderItem' | 'index' | 'wrapperStyle' | 'innerWrapperStyle' | 'className'
 > & {
   id: string;
   disabled?: boolean;
@@ -18,6 +18,7 @@ function SortableItem({
   wrapperStyle,
   innerWrapperStyle,
   disabled,
+  className,
 }: SortableItemProps) {
   const {
     attributes,
@@ -41,6 +42,8 @@ function SortableItem({
       innerWrapperStyle={innerWrapperStyle}
       listeners={listeners}
       attributes={attributes}
+      className={className}
+      disabled={disabled}
     />
   );
 }

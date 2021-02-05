@@ -1,11 +1,13 @@
 import React from 'react';
 import styled from '@emotion/styled';
 
+import {addErrorMessage} from 'app/actionCreators/indicator';
 import {PanelTable} from 'app/components/panels';
 import {t} from 'app/locale';
-import {DynamicSamplingRule} from 'app/types/dynamicSampling';
+import overflowEllipsis from 'app/styles/overflowEllipsis';
+import {DynamicSamplingRule, DynamicSamplingRuleType} from 'app/types/dynamicSampling';
 
-import DraggableList from './draggableList';
+import DraggableList, {UpdateItemsProps} from './draggableList';
 import Rule from './rule';
 import {layout} from './utils';
 
@@ -21,11 +23,13 @@ type RulesWithId = Array<DynamicSamplingRule & {id: string}>;
 
 type State = {
   rules: RulesWithId;
+  isAnyMenuActionsOpen: boolean;
 };
 
 class Rules extends React.PureComponent<Props, State> {
   state: State = {
     rules: [],
+    isAnyMenuActionsOpen: false,
   };
 
   componentDidMount() {
@@ -46,13 +50,41 @@ class Rules extends React.PureComponent<Props, State> {
     onUpdateRules(reordered);
   }
 
-  handleUpdateRules = (ruleIds: Array<string>) => {
+  handleUpdateRules = ({
+    activeIndex,
+    overIndex,
+    reorderedItems: ruleIds,
+  }: UpdateItemsProps) => {
     const {rules} = this.state;
     const reorderedRules = ruleIds
       .map(ruleId => rules.find(rule => rule.id === ruleId))
       .filter(rule => !!rule) as RulesWithId;
 
+    if (
+      rules[activeIndex].type === DynamicSamplingRuleType.TRACE &&
+      rules[overIndex].type === DynamicSamplingRuleType.TRANSACTION
+    ) {
+      addErrorMessage(
+        t('Transaction traces rules cannot be under Individual transactions rules')
+      );
+      return;
+    }
+
+    if (
+      rules[activeIndex].type === DynamicSamplingRuleType.TRANSACTION &&
+      rules[overIndex].type === DynamicSamplingRuleType.TRACE
+    ) {
+      addErrorMessage(
+        t('Individual transactionsrules cannot be above Transaction traces rules')
+      );
+      return;
+    }
+
     this.setState({rules: reorderedRules}, this.handleUpdateRulesParent);
+  };
+
+  handleChangeMenuActions = (isOpen: boolean) => {
+    this.setState({isAnyMenuActionsOpen: isOpen});
   };
 
   getRules() {
@@ -63,7 +95,7 @@ class Rules extends React.PureComponent<Props, State> {
 
   render() {
     const {onEditRule, onDeleteRule, disabled} = this.props;
-    const {rules} = this.state;
+    const {rules, isAnyMenuActionsOpen} = this.state;
 
     return (
       <StyledPanelTable
@@ -71,10 +103,11 @@ class Rules extends React.PureComponent<Props, State> {
         isEmpty={!rules.length}
         emptyMessage={t('There are no rules to display')}
       >
-        <DraggableList
+        <StyledDraggableList
+          disabled={disabled || isAnyMenuActionsOpen}
+          isAnyMenuActionsOpen={isAnyMenuActionsOpen}
           items={rules.map(rule => rule.id)}
           onUpdateItems={this.handleUpdateRules}
-          disabled={disabled}
           renderItem={({value, listeners, attributes, style: grabStyle}) => {
             const currentRule = rules.find(rule => rule.id === value);
 
@@ -93,6 +126,7 @@ class Rules extends React.PureComponent<Props, State> {
                 grabStyle={grabStyle}
                 listeners={listeners}
                 grabAttributes={attributes}
+                onChangeMenuActions={this.handleChangeMenuActions}
               />
             );
           }}
@@ -112,8 +146,8 @@ const StyledPanelTable = styled(PanelTable)`
   border-bottom-left-radius: 0;
   ${p => layout(p.theme)}
   > * {
-    :not(:last-child),
-    :nth-child(-n + 6):not(:last-child) {
+    ${overflowEllipsis};
+    :not(:last-child) {
       border-bottom: 1px solid ${p => p.theme.border};
     }
     :nth-child(n + 6) {
@@ -130,4 +164,16 @@ const StyledPanelTable = styled(PanelTable)`
             `}
     }
   }
+`;
+
+const StyledDraggableList = styled(DraggableList)<{
+  isAnyMenuActionsOpen: boolean;
+}>`
+  ${p =>
+    p.isAnyMenuActionsOpen &&
+    `
+      transform: none;
+      transform-origin: 0;
+      overflow: visible;
+    `}
 `;

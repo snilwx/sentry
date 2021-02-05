@@ -16,6 +16,8 @@ export type ItemProps = {
   style?: React.CSSProperties;
   wrapperStyle?: React.CSSProperties;
   innerWrapperStyle?: React.CSSProperties;
+  className?: string;
+  disabled?: boolean;
   renderItem(args: {
     dragging: boolean;
     sorting: boolean;
@@ -40,21 +42,25 @@ function Item({
   forwardRef,
   attributes,
   renderItem,
+  disabled,
   style,
   wrapperStyle,
   innerWrapperStyle,
+  className,
 }: ItemProps) {
   return (
     <Wrapper
+      disabled={disabled}
+      className={className}
       ref={forwardRef as React.Ref<HTMLDivElement> | undefined}
       style={
         {
-          ...wrapperStyle,
           transition,
           '--translate-x': transform ? `${Math.round(transform.x)}px` : undefined,
           '--translate-y': transform ? `${Math.round(transform.y)}px` : undefined,
           '--scale-x': transform?.scaleX ? `${transform.scaleX}` : undefined,
           '--scale-y': transform?.scaleY ? `${transform.scaleY}` : undefined,
+          ...wrapperStyle,
         } as React.CSSProperties
       }
     >
@@ -81,21 +87,9 @@ const boxShadowBorder = '0 0 0 calc(1px / var(--scale-x, 1)) rgba(63, 63, 68, 0.
 const boxShadowCommon = '0 1px calc(3px / var(--scale-x, 1)) 0 rgba(34, 33, 81, 0.15)';
 const boxShadow = `${boxShadowBorder}, ${boxShadowCommon}`;
 
-const Wrapper = styled('div')`
-  transform: translate3d(var(--translate-x, 0), var(--translate-y, 0), 0)
-    scaleX(var(--scale-x, 1)) scaleY(var(--scale-y, 1));
-  transform-origin: 0 0;
-  touch-action: manipulation;
-  --box-shadow: ${boxShadow};
-  --box-shadow-picked-up: ${boxShadowBorder}, -1px 0 15px 0 rgba(34, 33, 81, 0.01),
-    0px 15px 15px 0 rgba(34, 33, 81, 0.25);
-`;
-
 const InnerWrapper = styled('div')`
   position: relative;
   background-color: ${p => p.theme.white};
-  -webkit-tap-highlight-color: transparent;
-  transition: box-shadow 200ms cubic-bezier(0.18, 0.67, 0.6, 1.22);
 
   animation: pop 200ms cubic-bezier(0.18, 0.67, 0.6, 1.22);
   box-shadow: var(--box-shadow-picked-up);
@@ -114,4 +108,25 @@ const InnerWrapper = styled('div')`
       box-shadow: var(--box-shadow-picked-up);
     }
   }
+`;
+
+const Wrapper = styled('div')<{disabled?: boolean}>`
+  transform: translate3d(var(--translate-x, 0), var(--translate-y, 0), 0)
+    scaleX(var(--scale-x, 1)) scaleY(var(--scale-y, 1));
+  transform-origin: 0 0;
+  touch-action: manipulation;
+  --box-shadow: ${boxShadow};
+  --box-shadow-picked-up: ${boxShadowBorder}, -1px 0 15px 0 rgba(34, 33, 81, 0.01),
+    0px 15px 15px 0 rgba(34, 33, 81, 0.25);
+
+  ${p =>
+    p.disabled &&
+    `
+    ${InnerWrapper} {
+      box-shadow: none;
+      :focus {
+        box-shadow: none;
+      }
+    }
+    `}
 `;

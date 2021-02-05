@@ -17,53 +17,82 @@ type Props = {
   rule: DynamicSamplingRule;
   onEditRule: () => void;
   onDeleteRule: () => void;
+  onChangeMenuActions: (isOpen: boolean) => void;
   disabled: boolean;
   listeners: DraggableSyntheticListeners;
   grabAttributes?: UseDraggableArguments['attributes'];
   grabStyle?: React.CSSProperties;
 };
 
-function Rule({
-  rule,
-  onEditRule,
-  onDeleteRule,
-  disabled,
-  listeners,
-  grabAttributes,
-  grabStyle,
-}: Props) {
-  const {type, condition, sampleRate} = rule;
+type State = {
+  isMenuActionsOpen: boolean;
+};
 
-  return (
-    <Columns>
-      <Column>
-        <IconGrabbableWrapper
-          {...listeners}
-          disabled={disabled}
-          style={grabStyle}
-          {...grabAttributes}
-        >
-          <IconGrabbable />
-        </IconGrabbableWrapper>
-      </Column>
-      <Column>
-        <Type type={type} />
-      </Column>
-      <Column>
-        <Conditions condition={condition} />
-      </Column>
-      <CenteredColumn>
-        <SampleRate sampleRate={sampleRate} />
-      </CenteredColumn>
-      <Column>
-        <Actions
-          onEditRule={onEditRule}
-          onDeleteRule={onDeleteRule}
-          disabled={disabled}
-        />
-      </Column>
-    </Columns>
-  );
+class Rule extends React.Component<Props, State> {
+  state: State = {
+    isMenuActionsOpen: false,
+  };
+
+  handleChangeMenuAction = () => {
+    const {onChangeMenuActions} = this.props;
+
+    const isMenuActionsOpen = !this.state.isMenuActionsOpen;
+
+    this.setState(
+      {
+        isMenuActionsOpen,
+      },
+      () => onChangeMenuActions(isMenuActionsOpen)
+    );
+  };
+
+  render() {
+    const {
+      rule,
+      onEditRule,
+      onDeleteRule,
+      disabled,
+      listeners,
+      grabAttributes,
+      grabStyle,
+    } = this.props;
+
+    const {type, condition, sampleRate} = rule;
+    const {isMenuActionsOpen} = this.state;
+
+    return (
+      <Columns>
+        <Column>
+          <IconGrabbableWrapper
+            {...listeners}
+            disabled={disabled}
+            style={grabStyle}
+            {...grabAttributes}
+          >
+            <IconGrabbable />
+          </IconGrabbableWrapper>
+        </Column>
+        <Column>
+          <Type type={type} />
+        </Column>
+        <Column>
+          <Conditions condition={condition} />
+        </Column>
+        <CenteredColumn>
+          <SampleRate sampleRate={sampleRate} />
+        </CenteredColumn>
+        <Column>
+          <Actions
+            onEditRule={onEditRule}
+            onDeleteRule={onDeleteRule}
+            disabled={disabled}
+            onOpenMenuActions={this.handleChangeMenuAction}
+            isMenuActionsOpen={isMenuActionsOpen}
+          />
+        </Column>
+      </Columns>
+    );
+  }
 }
 
 export default Rule;
@@ -72,10 +101,12 @@ const Columns = styled('div')`
   cursor: default;
   display: grid;
   align-items: center;
-  :not(:last-child) {
-    border-bottom: 1px solid ${p => p.theme.border};
-  }
   ${p => layout(p.theme)}
+  border-bottom: 0;
+  > * :nth-child(5n) {
+    overflow: visible;
+    justify-content: flex-end;
+  }
 `;
 
 const Column = styled('div')`
