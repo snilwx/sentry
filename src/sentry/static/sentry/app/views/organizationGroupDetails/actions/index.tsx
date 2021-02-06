@@ -2,6 +2,7 @@ import React from 'react';
 import {browserHistory} from 'react-router';
 import styled from '@emotion/styled';
 
+import {bulkDelete, bulkUpdate} from 'app/actionCreators/group';
 import {
   addErrorMessage,
   addLoadingMessage,
@@ -93,7 +94,8 @@ class Actions extends React.Component<Props, State> {
 
     addLoadingMessage(t('Delete event\u2026'));
 
-    api.bulkDelete(
+    bulkDelete(
+      api,
       {
         orgId: organization.slug,
         projectId: project.slug,
@@ -120,7 +122,8 @@ class Actions extends React.Component<Props, State> {
 
     addLoadingMessage(t('Saving changes\u2026'));
 
-    api.bulkUpdate(
+    bulkUpdate(
+      api,
       {
         orgId: organization.slug,
         projectId: project.slug,
@@ -152,7 +155,8 @@ class Actions extends React.Component<Props, State> {
     this.setState({shareBusy: true});
 
     // not sure why this is a bulkUpdate
-    api.bulkUpdate(
+    bulkUpdate(
+      api,
       {
         orgId: organization.slug,
         projectId: project.slug,
