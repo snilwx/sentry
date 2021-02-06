@@ -24,11 +24,8 @@ jobs:
       - name: Set environment variables & others
         if: ${{ runner.os == 'macOS' }}
         shell: bash
-        # Setting the SHELL to zsh makes this machine more like a developer's machine
         run: |
           echo "HOMEBREW_CACHE=`brew --cache`" >> $GITHUB_ENV
-          echo "SHELL=/bin/zsh" >> $GITHUB_ENV
-          touch "$HOME/.zshrc"
           echo "VOLTA_HOME=$HOME/.volta" >> $GITHUB_ENV
           echo "PATH=$HOME/.volta/bin:$PATH" >> $GITHUB_ENV
           mv Brewfile.automation.lock.json Brewfile.lock.json
@@ -59,9 +56,12 @@ jobs:
         # XXX: It's unfortunate we need to call pyenv init - to make the Python version be switched correctly
         run: |
           make setup-pyenv
-          source "$HOME/.zshrc"
-          [[ $(which python) == /usr/bin/python ]] && echo "It fails to set correct Python" && exit 1
+          source "$HOME/.bashrc"
+          python -V
+          source "$HOME/.bash_profile"
+          python -V
           eval "$(pyenv init -)"
+          [[ $(which python) == /usr/bin/python ]] && echo "It fails to set correct Python" && exit 1
           echo "::set-output name=python-version::$(python -V  | sed s/Python\ //g)"
 
       - name: Setup pip
@@ -81,10 +81,7 @@ jobs:
       - name: Set up development environment (as per docs)
         # XXX: It's unfortunate we need to call pyenv init - to make the Python version be switched correctly
         run: |
-          python -V
-          cat "$HOME/.zshrc"
           eval "$(pyenv init -)"
-          python -V
           python -m venv .venv
           source .venv/bin/activate
           make install-py-dev
